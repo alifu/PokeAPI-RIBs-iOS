@@ -140,7 +140,7 @@ The app integrates with the [PokéAPI](https://pokeapi.co/) to fetch:
 - [ ] Pokémon sorting functionality
 - [ ] Poppins font integration
 - [ ] iOS Widget support
-- [ ] Unit Test
+- [x] Unit Test
 
 ## 💼 Portfolio
 

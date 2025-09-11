@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		A01568CD2E67E3D500D7CCE9 /* RIBs in Frameworks */ = {isa = PBXBuildFile; productRef = A01568CC2E67E3D500D7CCE9 /* RIBs */; };
+		A066C84B2E72B90B0064C311 /* RxBlocking in Frameworks */ = {isa = PBXBuildFile; productRef = A066C84A2E72B90B0064C311 /* RxBlocking */; };
+		A066C84D2E72B90B0064C311 /* RxTest in Frameworks */ = {isa = PBXBuildFile; productRef = A066C84C2E72B90B0064C311 /* RxTest */; };
 		A06B2BA02E69673F005A9D7F /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = A06B2B9F2E69673F005A9D7F /* RealmSwift */; };
 		A06B2BA32E69684A005A9D7F /* Moya in Frameworks */ = {isa = PBXBuildFile; productRef = A06B2BA22E69684A005A9D7F /* Moya */; };
 		A06B2BA52E69684A005A9D7F /* ReactiveMoya in Frameworks */ = {isa = PBXBuildFile; productRef = A06B2BA42E69684A005A9D7F /* ReactiveMoya */; };
@@ -111,6 +113,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A066C84D2E72B90B0064C311 /* RxTest in Frameworks */,
+				A066C84B2E72B90B0064C311 /* RxBlocking in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -205,6 +209,8 @@
 			);
 			name = "PokeAPI-RIBTests";
 			packageProductDependencies = (
+				A066C84A2E72B90B0064C311 /* RxBlocking */,
+				A066C84C2E72B90B0064C311 /* RxTest */,
 			);
 			productName = "PokeAPI-RIBTests";
 			productReference = A0749FA32E67CE79004BB494 /* PokeAPI-RIBTests.xctest */;
@@ -729,6 +735,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A01568CB2E67E3D500D7CCE9 /* XCRemoteSwiftPackageReference "RIBs-iOS" */;
 			productName = RIBs;
+		};
+		A066C84A2E72B90B0064C311 /* RxBlocking */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A0B5000B2E6843BF001804F6 /* XCRemoteSwiftPackageReference "RxSwift" */;
+			productName = RxBlocking;
+		};
+		A066C84C2E72B90B0064C311 /* RxTest */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A0B5000B2E6843BF001804F6 /* XCRemoteSwiftPackageReference "RxSwift" */;
+			productName = RxTest;
 		};
 		A06B2B9F2E69673F005A9D7F /* RealmSwift */ = {
 			isa = XCSwiftPackageProductDependency;
