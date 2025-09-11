@@ -20,7 +20,7 @@ protocol PokedexListPresentableListener: AnyObject {
     func selectedPokedex(at index: Int, data: Pokedex.Result)
 }
 
-final class PokedexListViewController: UIViewController, PokedexListPresentable, PokedexListViewControllable {
+final class PokedexListViewController: UIViewController, PokedexListPresentable, PokedexListViewControllable, UIScrollViewDelegate {
     
     weak var listener: PokedexListPresentableListener?
     
@@ -61,7 +61,7 @@ final class PokedexListViewController: UIViewController, PokedexListPresentable,
     
     private let collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
-        layout.itemSize = CGSize(width: 104, height: 108)
+//        layout.itemSize = CGSize(width: 104, height: 108)
         layout.minimumInteritemSpacing = 8
         layout.minimumLineSpacing = 8
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -76,6 +76,9 @@ final class PokedexListViewController: UIViewController, PokedexListPresentable,
         collectionView.snp.makeConstraints {
             $0.edges.equalToSuperview().inset(16)
         }
+        
+        collectionView.rx.setDelegate(self)
+            .disposed(by: disposeBag)
         
         collectionView.rx.contentOffset
             .observe(on: MainScheduler.instance)
@@ -93,8 +96,6 @@ final class PokedexListViewController: UIViewController, PokedexListPresentable,
                 
                 return Observable.empty()
             }
-        //            .withLatestFrom(isSearching)
-        //            .filter { !$0 }
             .map { _ in () }
             .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
             .subscribe(onNext: { [weak self] _ in
@@ -113,5 +114,16 @@ final class PokedexListViewController: UIViewController, PokedexListPresentable,
             self.listener?.selectedPokedex(at: indexPath.item, data: selectedPokemon)
         })
         .disposed(by: disposeBag)
+    }
+}
+
+extension PokedexListViewController: UICollectionViewDelegateFlowLayout {
+    
+    func collectionView(_ collectionView: UICollectionView,
+                        layout collectionViewLayout: UICollectionViewLayout,
+                        sizeForItemAt indexPath: IndexPath) -> CGSize {
+        // Example: width = half screen, height fixed
+        let width = (collectionView.bounds.width - 32) / 3
+        return CGSize(width: width, height: 108)
     }
 }

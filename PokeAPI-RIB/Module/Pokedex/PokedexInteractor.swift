@@ -15,7 +15,7 @@ import Foundation
 protocol PokedexRouting: ViewableRouting {
     // TODO: Declare methods the interactor can invoke to manage sub-tree via the router.
     func attachChild() -> PokedexListInteractable?
-    func openPokemon(_ pokedex: [Pokedex.Result], withSelectedId id: Int)
+    func openPokemon(_ pokedex: [Pokedex.Result], withSelectedId id: Int, repository: PokedexRepository, api: PokemonAPI)
     func detachPokemon()
 }
 
@@ -34,6 +34,8 @@ final class PokedexInteractor: PresentableInteractor<PokedexPresentable>, Pokede
     weak var router: PokedexRouting?
     weak var listener: PokedexListener?
     
+    private let repository: PokedexRepository
+    private let api: PokemonAPI
     private let disposeBag = DisposeBag()
     private let limit = 24
     private var offset = 0
@@ -44,7 +46,13 @@ final class PokedexInteractor: PresentableInteractor<PokedexPresentable>, Pokede
     
     // TODO: Add additional dependencies to constructor. Do not perform any logic
     // in constructor.
-    override init(presenter: PokedexPresentable) {
+    init(
+        presenter: PokedexPresentable,
+        repository: PokedexRepository,
+        api: PokemonAPI
+    ) {
+        self.repository = repository
+        self.api = api
         super.init(presenter: presenter)
         presenter.listener = self
     }
@@ -64,37 +72,32 @@ final class PokedexInteractor: PresentableInteractor<PokedexPresentable>, Pokede
     
     func fetchPokedex() {
         isLoading.accept(true)
-        let pokedex = RealmService.shared.getPokedex(limit: limit, offset: offset)
+        let pokedex = repository.getPokedex(limit: limit, offset: offset)
         if pokedex.isEmpty {
-            APIManager.provider.rx.request(.pokemonList(limit: limit, offset: offset))
-                .asObservable()
-                .subscribe { [weak self] event in
-                    guard let `self` = self else { return }
-                    defer { self.isLoading.accept(false) }
-                    switch event {
-                    case .next(let response):
-                        do {
-                            let data = try JSONDecoder().decode(Pokedex.Response.self, from: response.data)
-                            self.offset += self.limit
-                            let pokemonEntities = data.results.map { result in
-                                let entity = PokemonEntity()
-                                entity.idPokemon = Int(result.id ?? "") ?? 0
-                                entity.name = result.name
-                                entity.url = result.url
-                                return entity
-                            }
-                            RealmService.shared.storePokedex(pokemonEntities)
-                            self.pokedex.append(contentsOf: data.results)
-                            self.pokedexListInteractor?.updatePokedexList(data.results)
-                        } catch(let error) {
-                            print("❌ Error:", error)
+            api.fetchPokedex(limit: limit, offset: offset)
+                .subscribe(
+                    onSuccess: { [weak self] response in
+                        guard let `self` = self else { return }
+                        defer { self.isLoading.accept(false) }
+                        
+                        self.offset += self.limit
+                        let pokemonEntities = response.results.map { result in
+                            let entity = PokemonEntity()
+                            entity.idPokemon = Int(result.id ?? "") ?? 0
+                            entity.name = result.name
+                            entity.url = result.url
+                            return entity
                         }
-                    case .error(let error):
-                        print("❌ Error:", error)
-                    case .completed:
-                        print("✅ Completed")
+                        self.repository.storePokedex(pokemonEntities)
+                        self.pokedex.append(contentsOf: response.results)
+                        self.pokedexListInteractor?.updatePokedexList(response.results)
+                    },
+                    onFailure: { [weak self] error in
+                        guard let `self` = self else { return }
+                        self.isLoading.accept(false)
+                        print("❌ API Error:", error)
                     }
-                }
+                )
                 .disposed(by: disposeBag)
         } else {
             let localPokemon = pokedex.map { result in
@@ -126,7 +129,12 @@ extension PokedexInteractor {
     }
     
     func selectedPokedex(at index: Int, pokedex: Pokedex.Result) {
-        self.router?.openPokemon(self.pokedex, withSelectedId: index)
+        self.router?.openPokemon(
+            self.pokedex,
+            withSelectedId: index,
+            repository: repository,
+            api: api
+        )
     }
     
     func goBackFromPokemon() {

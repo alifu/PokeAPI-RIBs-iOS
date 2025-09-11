@@ -34,6 +34,8 @@ final class PokemonInteractor: PresentableInteractor<PokemonPresentable>, Pokemo
     weak var router: PokemonRouting?
     weak var listener: PokemonListener?
     
+    private let repository: PokedexRepository
+    private let api: PokemonAPI
     private let disposeBag = DisposeBag()
     private let dependency: PokemonInteractorDependency
     private var pokemonBannerInteractor: PokemonBannerInteractable?
@@ -49,8 +51,15 @@ final class PokemonInteractor: PresentableInteractor<PokemonPresentable>, Pokemo
     
     // TODO: Add additional dependencies to constructor. Do not perform any logic
     // in constructor.
-    init(presenter: PokemonPresentable, dependency: PokemonInteractorDependency) {
+    init(
+        presenter: PokemonPresentable,
+        dependency: PokemonInteractorDependency,
+        repository: PokedexRepository,
+        api: PokemonAPI
+    ) {
         self.dependency = dependency
+        self.repository = repository
+        self.api = api
         super.init(presenter: presenter)
         presenter.listener = self
     }
@@ -104,7 +113,7 @@ final class PokemonInteractor: PresentableInteractor<PokemonPresentable>, Pokemo
     private func fetchPokemon() {
         guard let `name` = dependency.pokemonNavigator.currentRelay.value?.name else { return }
         isLoading.accept(true)
-        if let pokemon = RealmService.shared.getPokemon(withName: name) {
+        if let pokemon = repository.getPokemon(withName: name) {
             let rawAbilities = Array(pokemon.abilities.map {
                 String($0.name)
             })
@@ -127,61 +136,54 @@ final class PokemonInteractor: PresentableInteractor<PokemonPresentable>, Pokemo
             height.accept(rawHeight)
             let rawWeight = pokemon.weight
             weight.accept(rawWeight)
-            //                    self.id = Int(pokemon.idPokemon)
             isLoading.accept(false)
             refreshData()
         } else {
-            APIManager.provider.rx.request(.pokemon(name: name))
-                .asObservable()
-                .subscribe { [weak self] event in
-                    guard let `self` = self else { return }
-                    defer {
-                        self.isLoading.accept(false)
-                        self.refreshData()
-                    }
-                    switch event {
-                    case .next(let response):
-                        do {
-                            let result = try JSONDecoder().decode(Pokemon.Response.self, from: response.data)
-                            let rawAbilities = result.abilities
-                            let rawSprites = result.sprites
-                            let rawStats = result.stats
-                            let rawTypes = result.types
-                            let rawHeight = result.height
-                            let rawWeight = result.weight
-                            let rawName = result.name
-                            let rawId = result.id
-                            
-                            let abilitiesString = rawAbilities.map { $0.ability.name }
-                            self.abilities.accept(abilitiesString)
-                            self.imageUrl.accept(rawSprites.other.officialArtwork.frontDefault)
-                            self.stats.accept(rawStats)
-                            let rawTypesString = rawTypes.map { $0.type.name }
-                            self.types.accept(rawTypesString)
-                            self.height.accept(Double(rawHeight))
-                            self.weight.accept(Double(rawWeight))
-                            //                        self.name = name
-                            //                        self.id = id
-
-                            RealmService.shared.storePokemon(
-                                id: rawId,
-                                name: rawName,
-                                abilities: rawAbilities,
-                                spritesOther: rawSprites,
-                                types: rawTypes,
-                                weight: rawWeight,
-                                height: rawHeight,
-                                stats: rawStats
-                            )
-                        } catch(let error) {
-                            print("❌ Error:", error)
+            
+            api.fetchPokemon(name: name)
+                .subscribe(
+                    onSuccess: { [weak self] response in
+                        guard let `self` = self else { return }
+                        defer {
+                            self.isLoading.accept(false)
+                            self.refreshData()
                         }
-                    case .error(let error):
-                        print("❌ Error:", error)
-                    case .completed:
-                        print("✅ Completed")
+                        
+                        let rawAbilities = response.abilities
+                        let rawSprites = response.sprites
+                        let rawStats = response.stats
+                        let rawTypes = response.types
+                        let rawHeight = response.height
+                        let rawWeight = response.weight
+                        let rawName = response.name
+                        let rawId = response.id
+                        
+                        let abilitiesString = rawAbilities.map { $0.ability.name }
+                        self.abilities.accept(abilitiesString)
+                        self.imageUrl.accept(rawSprites.other.officialArtwork.frontDefault)
+                        self.stats.accept(rawStats)
+                        let rawTypesString = rawTypes.map { $0.type.name }
+                        self.types.accept(rawTypesString)
+                        self.height.accept(Double(rawHeight))
+                        self.weight.accept(Double(rawWeight))
+
+                        repository.storePokemon(
+                            id: rawId,
+                            name: rawName,
+                            abilities: rawAbilities,
+                            spritesOther: rawSprites,
+                            types: rawTypes,
+                            weight: rawWeight,
+                            height: rawHeight,
+                            stats: rawStats
+                        )
+                    },
+                    onFailure: { [weak self] error in
+                        guard let `self` = self else { return }
+                        self.isLoading.accept(false)
+                        print("❌ API Error:", error)
                     }
-                }
+                )
                 .disposed(by: disposeBag)
         }
     }
@@ -189,39 +191,34 @@ final class PokemonInteractor: PresentableInteractor<PokemonPresentable>, Pokemo
     private func fetchPokemonSpecies() {
         guard let `name` = dependency.pokemonNavigator.currentRelay.value?.name else { return }
         isLoading.accept(true)
-        if let pokemon = RealmService.shared.getPokemonSpecies(withName: name) {
+        if let pokemon = repository.getPokemonSpecies(withName: name) {
             let rawAbout = pokemon.flavourTextEntries.first?.flavourText ?? ""
             about.accept(rawAbout.replacingOccurrences(of: "\n", with: " "))
             isLoading.accept(false)
             pokemonInfoInteractor?.updatePokemonDescription(about.value)
         } else {
-            APIManager.provider.rx.request(.pokemonSpecies(name: name))
-                .asObservable()
-                .subscribe { [weak self] event in
-                    guard let `self` = self else { return }
-                    defer {
-                        self.isLoading.accept(false)
-                        self.pokemonInfoInteractor?.updatePokemonDescription(self.about.value)
-                    }
-                    switch event {
-                    case .next(let response):
-                        do {
-                            let result = try JSONDecoder().decode(PokemonSpecies.Response.self, from: response.data)
-                            let resultAbout = result.flavorTextEntries.first?.flavourText ?? ""
-                            
-                            let rawAbout = resultAbout.replacingOccurrences(of: "\n", with: " ")
-                            self.about.accept(rawAbout)
-                            
-                            RealmService.shared.storePokemonSpecies(name: name, flavourTextEntries: result.flavorTextEntries)
-                        } catch(let error) {
-                            print("❌ Error:", error)
+            api.fetchPokemonSpecies(name: name)
+                .subscribe(
+                    onSuccess: { [weak self] response in
+                        guard let `self` = self else { return }
+                        defer {
+                            self.isLoading.accept(false)
+                            self.pokemonInfoInteractor?.updatePokemonDescription(self.about.value)
                         }
-                    case .error(let error):
-                        print("❌ Error:", error)
-                    case .completed:
-                        print("✅ Completed")
+                        
+                        let resultAbout = response.flavorTextEntries.first?.flavourText ?? ""
+                        
+                        let rawAbout = resultAbout.replacingOccurrences(of: "\n", with: " ")
+                        self.about.accept(rawAbout)
+                        
+                        repository.storePokemonSpecies(name: name, flavourTextEntries: response.flavorTextEntries)
+                    },
+                    onFailure: { [weak self] error in
+                        guard let `self` = self else { return }
+                        self.isLoading.accept(false)
+                        print("❌ API Error:", error)
                     }
-                }
+                )
                 .disposed(by: disposeBag)
         }
     }

@@ -51,10 +51,37 @@ extension PokeAPI: TargetType {
     var headers: [String : String]? { ["Content-Type": "application/json"] }
 }
 
+protocol PokemonAPI {
+    func fetchPokedex(limit: Int, offset: Int) -> Single<Pokedex.Response>
+    func fetchPokemon(name: String) -> Single<Pokemon.Response>
+    func fetchPokemonSpecies(name: String) -> Single<PokemonSpecies.Response>
+}
+
 struct APIManager {
     
-    private static let shared = APIManager()
+    static let shared = APIManager()
     static let provider = MoyaProvider<PokeAPI>()
     
     private init() {}
+}
+
+extension APIManager: PokemonAPI {
+    
+    func fetchPokedex(limit: Int, offset: Int) -> Single<Pokedex.Response> {
+        return APIManager.provider.rx
+            .request(.pokemonList(limit: limit, offset: offset))
+            .map(Pokedex.Response.self)
+    }
+    
+    func fetchPokemon(name: String) -> Single<Pokemon.Response> {
+        return APIManager.provider.rx
+            .request(.pokemon(name: name))
+            .map(Pokemon.Response.self)
+    }
+    
+    func fetchPokemonSpecies(name: String) -> Single<PokemonSpecies.Response> {
+        return APIManager.provider.rx
+            .request(.pokemonSpecies(name: name))
+            .map(PokemonSpecies.Response.self)
+    }
 }

@@ -46,8 +46,14 @@ final class PokedexRouter: ViewableRouter<PokedexInteractable, PokedexViewContro
         return childRouter.interactable as? PokedexListInteractable
     }
     
-    func openPokemon(_ pokedex: [Pokedex.Result], withSelectedId id: Int) {
-        let pokemonRouter = pokemonBuilder.build(withListener: interactor, results: pokedex, startIndex: id)
+    func openPokemon(_ pokedex: [Pokedex.Result], withSelectedId id: Int, repository: PokedexRepository, api: PokemonAPI) {
+        let pokemonRouter = pokemonBuilder.build(
+            withListener: interactor,
+            results: pokedex,
+            startIndex: id,
+            repository: repository,
+            api: api
+        )
         self.pokemon = pokemonRouter
         attachChild(pokemonRouter)
         viewController.openPokemonPage(viewController: pokemon?.viewControllable)

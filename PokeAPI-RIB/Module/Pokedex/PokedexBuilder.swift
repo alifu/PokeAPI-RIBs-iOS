@@ -32,7 +32,11 @@ final class PokedexBuilder: Builder<PokedexDependency>, PokedexBuildable {
     func build(withListener listener: PokedexListener) -> PokedexRouting {
         let component = PokedexComponent(dependency: dependency)
         let viewController = PokedexViewController()
-        let interactor = PokedexInteractor(presenter: viewController)
+        let interactor = PokedexInteractor(
+            presenter: viewController,
+            repository: RealmService.shared,
+            api: APIManager.shared
+        )
         let pokedexListBuilder = PokedexListBuilder(dependency: component)
         let pokemonBuilder = PokemonBuilder(dependency: component)
         

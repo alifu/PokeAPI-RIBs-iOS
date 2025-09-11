@@ -8,6 +8,15 @@
 import Foundation
 import RealmSwift
 
+protocol PokedexRepository {
+    func getPokedex(limit: Int, offset: Int) -> [PokemonEntity]
+    func storePokedex(_ pokemons: [PokemonEntity])
+    func getPokemonSpecies(withName: String) -> PokemonSpeciesEntity?
+    func storePokemonSpecies(name: String, flavourTextEntries: [PokemonSpecies.FlavourTextEntry])
+    func getPokemon(withName: String) -> PokemonDetailEntity?
+    func storePokemon(id: Int, name: String, abilities: [Pokemon.Ability], spritesOther: Pokemon.Sprites, types: [Pokemon.Types], weight: Double, height: Double, stats: [Pokemon.Stats])
+}
+
 class RealmService {
     
     static let shared = RealmService()
@@ -84,3 +93,5 @@ class RealmService {
         return realm.object(ofType: PokemonSpeciesEntity.self, forPrimaryKey: withName)
     }
 }
+
+extension RealmService: PokedexRepository { }

@@ -30,7 +30,7 @@ final class PokemonComponent: Component<PokemonDependency>, PokemonDependency, P
 // MARK: - Builder
 
 protocol PokemonBuildable: Buildable {
-    func build(withListener listener: PokemonListener, results: [Pokedex.Result], startIndex: Int) -> PokemonRouting
+    func build(withListener listener: PokemonListener, results: [Pokedex.Result], startIndex: Int, repository: PokedexRepository, api: PokemonAPI) -> PokemonRouting
 }
 
 final class PokemonBuilder: Builder<PokemonDependency>, PokemonBuildable {
@@ -39,10 +39,21 @@ final class PokemonBuilder: Builder<PokemonDependency>, PokemonBuildable {
         super.init(dependency: dependency)
     }
 
-    func build(withListener listener: PokemonListener, results: [Pokedex.Result], startIndex: Int) -> PokemonRouting {
+    func build(
+        withListener listener: PokemonListener,
+        results: [Pokedex.Result],
+        startIndex: Int,
+        repository: PokedexRepository,
+        api: PokemonAPI
+    ) -> PokemonRouting {
         let component = PokemonComponent(dependency: dependency, results: results, startIndex: startIndex)
         let viewController = PokemonViewController()
-        let interactor = PokemonInteractor(presenter: viewController, dependency: component)
+        let interactor = PokemonInteractor(
+            presenter: viewController,
+            dependency: component,
+            repository: repository,
+            api: api
+        )
         let pokemonBannerBuilder = PokemonBannerBuilder(dependency: component)
         let pokemonInfoBuilder = PokemonInfoBuilder(dependency: component)
         interactor.listener = listener
