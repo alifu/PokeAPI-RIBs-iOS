@@ -6,6 +6,8 @@
 //
 
 import SnapKit
+import RxCocoa
+import RxSwift
 import UIKit
 
 class SearchBox: UIView {
@@ -81,5 +83,17 @@ class SearchBox: UIView {
             $0.leading.equalTo(searchIcon.snp.trailing).offset(8)
             $0.trailing.equalTo(clearButton.snp.leading).offset(-8)
         }
+    }
+    
+    var textChanged: Observable<String?> {
+        searchField.rx.text.asObservable()
+    }
+    
+    var clearTapped: Observable<Void> {
+        clearButton.rx.tap.asObservable()
+    }
+    
+    func clearText() {
+        searchField.text = ""
     }
 }

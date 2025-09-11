@@ -70,4 +70,8 @@ extension PokedexListInteractor {
         current.append(contentsOf: data)
         pokedexRelay.accept(current)
     }
+    
+    func searchPokedexList(_ data: [Pokedex.Result]) {
+        pokedexRelay.accept(data)
+    }
 }

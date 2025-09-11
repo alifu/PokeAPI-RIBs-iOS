@@ -39,6 +39,7 @@ final class PokedexInteractor: PresentableInteractor<PokedexPresentable>, Pokede
     private var offset = 0
     private var pokedexListInteractor: PokedexListInteractable?
     private var pokedex: [Pokedex.Result] = []
+    private var filteredPokedex: [Pokedex.Result] = []
     private var isLoading = PublishRelay<Bool>()
     
     // TODO: Add additional dependencies to constructor. Do not perform any logic
@@ -130,5 +131,21 @@ extension PokedexInteractor {
     
     func goBackFromPokemon() {
         self.router?.detachPokemon()
+    }
+    
+    func didUpdateSearchQuery(_ query: String) {
+        if query.isEmpty {
+            filteredPokedex = pokedex
+        } else {
+            filteredPokedex = pokedex.filter { result in
+                result.name.lowercased().contains(query.lowercased())
+            }
+        }
+        self.pokedexListInteractor?.searchPokedexList(filteredPokedex)
+    }
+    
+    func didClearSearch() {
+        filteredPokedex = pokedex
+        self.pokedexListInteractor?.searchPokedexList(filteredPokedex)
     }
 }

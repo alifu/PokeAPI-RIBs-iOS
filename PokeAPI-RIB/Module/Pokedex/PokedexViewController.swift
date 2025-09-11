@@ -6,6 +6,7 @@
 //
 
 import RIBs
+import RxCocoa
 import RxSwift
 import SnapKit
 import UIKit
@@ -14,6 +15,8 @@ protocol PokedexPresentableListener: AnyObject {
     // TODO: Declare properties and methods that the view controller can invoke to perform
     // business logic, such as signIn(). This protocol is implemented by the corresponding
     // interactor class.
+    func didUpdateSearchQuery(_ query: String)
+    func didClearSearch()
 }
 
 final class PokedexViewController: UIViewController, PokedexPresentable, PokedexViewControllable {
@@ -112,6 +115,23 @@ final class PokedexViewController: UIViewController, PokedexPresentable, Pokedex
             make.top.equalTo(searchBox.snp.bottom).offset(16)
             make.leading.trailing.bottom.equalTo(self.view.safeAreaLayoutGuide).inset(16)
         }
+        
+        searchBox.textChanged
+            .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
+            .distinctUntilChanged()
+            .bind { [weak self] query in
+                guard let `self` = self else { return }
+                self.listener?.didUpdateSearchQuery(query ?? "")
+            }
+            .disposed(by: disposeBag)
+        
+        searchBox.clearTapped
+            .bind { [weak self] in
+                guard let `self` = self else { return }
+                self.searchBox.clearText()
+                self.listener?.didClearSearch()
+            }
+            .disposed(by: disposeBag)
     }
 }
 

@@ -12,6 +12,7 @@ protocol PokedexListInteractable: Interactable {
     var listener: PokedexListListener? { get set }
     
     func updatePokedexList(_ data: [Pokedex.Result])
+    func searchPokedexList(_ data: [Pokedex.Result])
 }
 
 protocol PokedexListViewControllable: ViewControllable {
