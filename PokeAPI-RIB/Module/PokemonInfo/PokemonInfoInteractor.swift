@@ -2,7 +2,7 @@
 //  PokemonInfoInteractor.swift
 //  PokeAPI-RIB
 //
-//  Created by Alif Phincon on 10/09/25.
+//  Created by Alif on 10/09/25.
 //
 
 import RIBs
@@ -15,6 +15,9 @@ protocol PokemonInfoRouting: ViewableRouting {
 protocol PokemonInfoPresentable: Presentable {
     var listener: PokemonInfoPresentableListener? { get set }
     // TODO: Declare methods the interactor can invoke the presenter to present data.
+    
+    func loadPokemonInfo(abilities: [String], stats: [Pokemon.Stats], types: [String], height: Double, weight: Double)
+    func loadPokemonDescription(_ description: String)
 }
 
 protocol PokemonInfoListener: AnyObject {
@@ -41,5 +44,16 @@ final class PokemonInfoInteractor: PresentableInteractor<PokemonInfoPresentable>
     override func willResignActive() {
         super.willResignActive()
         // TODO: Pause any business logic.
+    }
+}
+
+extension PokemonInfoInteractor {
+    
+    func updatePokemonInfo(abilities: [String], stats: [Pokemon.Stats], types: [String], height: Double, weight: Double) {
+        self.presenter.loadPokemonInfo(abilities: abilities, stats: stats, types: types, height: height, weight: weight)
+    }
+    
+    func updatePokemonDescription(_ description: String) {
+        self.presenter.loadPokemonDescription(description)
     }
 }

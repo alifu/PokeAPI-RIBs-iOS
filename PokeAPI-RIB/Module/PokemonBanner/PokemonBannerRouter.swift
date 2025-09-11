@@ -2,7 +2,7 @@
 //  PokemonBannerRouter.swift
 //  PokeAPI-RIB
 //
-//  Created by Alif Phincon on 10/09/25.
+//  Created by Alif on 10/09/25.
 //
 
 import RIBs
@@ -11,7 +11,7 @@ protocol PokemonBannerInteractable: Interactable {
     var router: PokemonBannerRouting? { get set }
     var listener: PokemonBannerListener? { get set }
     
-    func updatePokemonBanner(with data: Pokedex.Result)
+    func updatePokemonBanner(with data: String)
 }
 
 protocol PokemonBannerViewControllable: ViewControllable {

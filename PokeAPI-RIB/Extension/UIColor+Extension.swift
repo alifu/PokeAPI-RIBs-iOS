@@ -2,7 +2,7 @@
 //  UIColor+Extension.swift
 //  PokeAPI-RIB
 //
-//  Created by Alif Phincon on 03/09/25.
+//  Created by Alif on 03/09/25.
 //
 
 import UIKit

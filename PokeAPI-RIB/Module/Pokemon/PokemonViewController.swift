@@ -2,7 +2,7 @@
 //  PokemonViewController.swift
 //  PokeAPI-RIB
 //
-//  Created by Alif Phincon on 09/09/25.
+//  Created by Alif on 09/09/25.
 //
 
 import RIBs
@@ -152,8 +152,7 @@ final class PokemonViewController: UIViewController, PokemonPresentable, Pokemon
         nameLabel.snp.makeConstraints {
             $0.centerY.equalTo(backButton.snp.centerY)
             $0.leading.equalTo(backButton.snp.trailing).offset(8)
-            $0.width.greaterThanOrEqualTo(10)
-            $0.trailing.equalTo(tagImageView.snp.leading).offset(-8)
+            $0.width.greaterThanOrEqualTo(0)
         }
         
         backButton.rx.tap

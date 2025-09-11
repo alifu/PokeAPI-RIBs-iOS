@@ -2,7 +2,7 @@
 //  PokemonBannerViewController.swift
 //  PokeAPI-RIB
 //
-//  Created by Alif Phincon on 10/09/25.
+//  Created by Alif on 10/09/25.
 //
 
 import Nuke
@@ -103,6 +103,7 @@ final class PokemonBannerViewController: UIViewController, PokemonBannerPresenta
 extension PokemonBannerViewController {
     
     func loadPokemonImage(with urlString: String?) {
+        self.pokemonImageView.image = UIImage(named: "silhouette")
         if let urlString, let url = URL(string: urlString) {
             let request = ImageRequest(url: url)
             ImagePipeline.shared.loadImage(with: request) { [weak self] result in

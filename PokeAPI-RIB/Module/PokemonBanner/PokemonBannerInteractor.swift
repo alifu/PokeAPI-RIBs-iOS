@@ -2,7 +2,7 @@
 //  PokemonBannerInteractor.swift
 //  PokeAPI-RIB
 //
-//  Created by Alif Phincon on 10/09/25.
+//  Created by Alif on 10/09/25.
 //
 
 import RIBs
@@ -49,8 +49,8 @@ final class PokemonBannerInteractor: PresentableInteractor<PokemonBannerPresenta
 
 extension PokemonBannerInteractor {
     
-    func updatePokemonBanner(with data: Pokedex.Result) {
-        self.presenter.loadPokemonImage(with: data.imageURL)
+    func updatePokemonBanner(with data: String) {
+        self.presenter.loadPokemonImage(with: data)
     }
     
     func previousButtonTapped() {

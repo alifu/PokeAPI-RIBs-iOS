@@ -2,7 +2,7 @@
 //  PokemonInteractor.swift
 //  PokeAPI-RIB
 //
-//  Created by Alif Phincon on 09/09/25.
+//  Created by Alif on 09/09/25.
 //
 
 import Foundation
@@ -39,8 +39,13 @@ final class PokemonInteractor: PresentableInteractor<PokemonPresentable>, Pokemo
     private var pokemonBannerInteractor: PokemonBannerInteractable?
     private var pokemonInfoInteractor: PokemonInfoInteractable?
     private let isLoading = PublishRelay<Bool>()
+    private let abilities = BehaviorRelay<[String]>(value: [])
+    private let imageUrl = BehaviorRelay<String>(value: "")
+    private let stats = BehaviorRelay<[Pokemon.Stats]>(value: [])
     private let types = BehaviorRelay<[String]>(value: [])
-    private let about = PublishRelay<String>()
+    private let about = BehaviorRelay<String>(value: "")
+    private let height = BehaviorRelay<Double>(value: 0)
+    private let weight = BehaviorRelay<Double>(value: 0)
     
     // TODO: Add additional dependencies to constructor. Do not perform any logic
     // in constructor.
@@ -56,12 +61,11 @@ final class PokemonInteractor: PresentableInteractor<PokemonPresentable>, Pokemo
         presenter.loading(isLoading.asObservable())
         presenter.changeBackground(with: types.asObservable())
         presenter.changeHeader(with: dependency.pokemonNavigator.currentRelay.asObservable())
-            
+        
         attachPokemonBanner()
         attachPokemonInfo()
         fetchPokemon()
         fetchPokemonSpecies()
-        refreshData()
     }
     
     override func willResignActive() {
@@ -88,41 +92,53 @@ final class PokemonInteractor: PresentableInteractor<PokemonPresentable>, Pokemo
     }
     
     private func refreshData() {
-        if let current = dependency.pokemonNavigator.currentRelay.value {
-            pokemonBannerInteractor?.updatePokemonBanner(with: current)
-        }
+        pokemonBannerInteractor?.updatePokemonBanner(with: imageUrl.value)
+        pokemonInfoInteractor?.updatePokemonInfo(
+            abilities: abilities.value,
+            stats: stats.value,
+            types: types.value,
+            height: height.value,
+            weight: weight.value)
     }
     
     private func fetchPokemon() {
         guard let `name` = dependency.pokemonNavigator.currentRelay.value?.name else { return }
         isLoading.accept(true)
         if let pokemon = RealmService.shared.getPokemon(withName: name) {
-            //                    self.abilities = Array(pokemon.abilities.map {
-            //                        String($0.name)
-            //                    })
-            //                    self.imageURL = pokemon.spritesOther?.officialArtwork ?? ""
-            //                    self.stats = Array(pokemon.stats.map { result in
-            //                        Pokemon.Stats(
-            //                            baseStat: result.baseStat,
-            //                            effort: result.effort,
-            //                            stat: Pokemon.StatsInfo(name: result.stat, url: "")
-            //                        )
-            //                    })
+            let rawAbilities = Array(pokemon.abilities.map {
+                String($0.name)
+            })
+            abilities.accept(rawAbilities)
+            let rawImageURL = pokemon.spritesOther?.officialArtwork ?? ""
+            imageUrl.accept(rawImageURL)
+            let rawStats = Array(pokemon.stats.map { result in
+                Pokemon.Stats(
+                    baseStat: result.baseStat,
+                    effort: result.effort,
+                    stat: Pokemon.StatsInfo(name: result.stat, url: "")
+                )
+            })
+            stats.accept(rawStats)
             let rawTypes = Array(pokemon.types.map { result in
                 String(result.type)
             })
             types.accept(rawTypes)
-            //                    self.height = pokemon.height
-            //                    self.weight = pokemon.weight
-            //                    self.name = pokemon.name
+            let rawHeight = pokemon.height
+            height.accept(rawHeight)
+            let rawWeight = pokemon.weight
+            weight.accept(rawWeight)
             //                    self.id = Int(pokemon.idPokemon)
             isLoading.accept(false)
+            refreshData()
         } else {
             APIManager.provider.rx.request(.pokemon(name: name))
                 .asObservable()
                 .subscribe { [weak self] event in
                     guard let `self` = self else { return }
-                    defer { self.isLoading.accept(false) }
+                    defer {
+                        self.isLoading.accept(false)
+                        self.refreshData()
+                    }
                     switch event {
                     case .next(let response):
                         do {
@@ -136,16 +152,17 @@ final class PokemonInteractor: PresentableInteractor<PokemonPresentable>, Pokemo
                             let rawName = result.name
                             let rawId = result.id
                             
-                            //                        self.abilities = abilities.map { $0.ability.name }
-                            //                        self.imageURL = sprites.other.officialArtwork.frontDefault
-                            //                        self.stats = stats
+                            let abilitiesString = rawAbilities.map { $0.ability.name }
+                            self.abilities.accept(abilitiesString)
+                            self.imageUrl.accept(rawSprites.other.officialArtwork.frontDefault)
+                            self.stats.accept(rawStats)
                             let rawTypesString = rawTypes.map { $0.type.name }
                             self.types.accept(rawTypesString)
-                            //                        self.height = Double(height)
-                            //                        self.weight = Double(weight)
+                            self.height.accept(Double(rawHeight))
+                            self.weight.accept(Double(rawWeight))
                             //                        self.name = name
                             //                        self.id = id
-                            //
+
                             RealmService.shared.storePokemon(
                                 id: rawId,
                                 name: rawName,
@@ -174,13 +191,18 @@ final class PokemonInteractor: PresentableInteractor<PokemonPresentable>, Pokemo
         isLoading.accept(true)
         if let pokemon = RealmService.shared.getPokemonSpecies(withName: name) {
             let rawAbout = pokemon.flavourTextEntries.first?.flavourText ?? ""
+            about.accept(rawAbout.replacingOccurrences(of: "\n", with: " "))
             isLoading.accept(false)
+            pokemonInfoInteractor?.updatePokemonDescription(about.value)
         } else {
             APIManager.provider.rx.request(.pokemonSpecies(name: name))
                 .asObservable()
                 .subscribe { [weak self] event in
                     guard let `self` = self else { return }
-                    defer { self.isLoading.accept(false) }
+                    defer {
+                        self.isLoading.accept(false)
+                        self.pokemonInfoInteractor?.updatePokemonDescription(self.about.value)
+                    }
                     switch event {
                     case .next(let response):
                         do {
@@ -213,14 +235,12 @@ extension PokemonInteractor {
     
     func didClickPrevious() {
         dependency.pokemonNavigator.movePrevious()
-        refreshData()
         fetchPokemon()
         fetchPokemonSpecies()
     }
     
     func didClickNext() {
         dependency.pokemonNavigator.moveNext()
-        refreshData()
         fetchPokemon()
         fetchPokemonSpecies()
     }

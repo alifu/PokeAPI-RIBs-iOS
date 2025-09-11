@@ -2,7 +2,7 @@
 //  NavigationControllerViewControllable.swift
 //  PokeAPI-RIB
 //
-//  Created by Alif Phincon on 09/09/25.
+//  Created by Alif on 09/09/25.
 //
 
 import RIBs

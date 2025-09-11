@@ -2,7 +2,7 @@
 //  PokemonInfoBuilder.swift
 //  PokeAPI-RIB
 //
-//  Created by Alif Phincon on 10/09/25.
+//  Created by Alif on 10/09/25.
 //
 
 import RIBs

@@ -2,7 +2,7 @@
 //  PokemonCardCell.swift
 //  PokeAPI-RIB
 //
-//  Created by Alif Phincon on 04/09/25.
+//  Created by Alif on 04/09/25.
 //
 
 import Nuke

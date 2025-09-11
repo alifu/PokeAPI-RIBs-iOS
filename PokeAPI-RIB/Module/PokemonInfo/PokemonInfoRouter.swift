@@ -2,7 +2,7 @@
 //  PokemonInfoRouter.swift
 //  PokeAPI-RIB
 //
-//  Created by Alif Phincon on 10/09/25.
+//  Created by Alif on 10/09/25.
 //
 
 import RIBs
@@ -10,6 +10,9 @@ import RIBs
 protocol PokemonInfoInteractable: Interactable {
     var router: PokemonInfoRouting? { get set }
     var listener: PokemonInfoListener? { get set }
+    
+    func updatePokemonInfo(abilities: [String], stats: [Pokemon.Stats], types: [String], height: Double, weight: Double)
+    func updatePokemonDescription(_ description: String)
 }
 
 protocol PokemonInfoViewControllable: ViewControllable {
