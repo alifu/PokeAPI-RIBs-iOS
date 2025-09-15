@@ -119,10 +119,7 @@ final class PokedexListViewController: UIViewController, PokedexListPresentable,
 
 extension PokedexListViewController: UICollectionViewDelegateFlowLayout {
     
-    func collectionView(_ collectionView: UICollectionView,
-                        layout collectionViewLayout: UICollectionViewLayout,
-                        sizeForItemAt indexPath: IndexPath) -> CGSize {
-        // Example: width = half screen, height fixed
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let width = (collectionView.bounds.width - 32) / 3
         return CGSize(width: width, height: 108)
     }
