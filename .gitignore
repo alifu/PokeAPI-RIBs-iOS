@@ -13,6 +13,10 @@ DerivedData/
 *.xcodeproj/xcuserdata/
 *.xcworkspace/xcuserdata/
 
+# Xcode workspace user data
+*.xcuserdata/
+*.xcuserstate
+
 # Swift Package Manager
 .build/
 
